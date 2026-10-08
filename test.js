@@ -39,18 +39,36 @@
 // ==========================================
 
 
-    const map = ['spray', 'limit'];
+    // const map = ['spray', 'limit'];
 
-    function myMap(arr){
+    // function myMap(arr){
+    //   for (let i = 0; i < arr.length; i++) {
+    //     const obj = {
+    //       id: i,
+    //       name: arr[i],
+    //     }
+    //     console.log(obj);
+    //   }
+    // }
+    // myMap(map);
+
+
+ const mapArr = ['spray', 'limit'];
+
+    function myMap(arr, map){
+        
+        const result = [];
+
       for (let i = 0; i < arr.length; i++) {
-        const obj = {
-          id: i,
-          name: arr[i],
-        }
-        console.log(obj);
+
+            result.push(map(arr[i], i));
+            
       }
+      return result;
     }
-    myMap(map);
+
+    const mapped = myMap(mapArr, (item, index) => ({id: index, name: item}));
+    console.log(mapped);
 
 
 // ==========================================
