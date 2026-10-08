@@ -76,20 +76,42 @@
 // ==========================================
 
 
-    const find = [
+    // const find = [
+    //   {id: 0, name: 'spray'},
+    //   {id: 1, name: 'limit'},
+    // ];
+    // const id = 1;
+
+    // function myFind(arr){
+    //   for (let item of arr) {
+    //     if (item.id === id) {
+    //       console.log(item);
+    //     }
+    //   }
+    // }
+    // myFind(find);
+
+ const arrFind = [
       {id: 0, name: 'spray'},
       {id: 1, name: 'limit'},
     ];
     const id = 1;
 
-    function myFind(arr){
-      for (let item of arr) {
-        if (item.id === id) {
-          console.log(item);
+    function myFinder(arr, find){ 
+      let result = {};
+      
+      for (let i = 0; i < arr.length; i++) {
+        
+        if (find(arr[i])) {
+          result = arr[i];
         }
       }
+      return result;
     }
-    myFind(find);
+    
+    const findObj = myFinder(arrFind, (item) => item.id === id);
+    
+    console.log(findObj);
 
 
 // ==========================================
