@@ -1,18 +1,16 @@
 import Functions from "./functions.jsx";
+import Display from "./display.jsx";
 import "./style/button.css";
 
-export default function Buttons(operation){
-
-
-  const handleButton =(e) => {
-    const button = e.currentTarget.value;
-    return button;
-    console.log(`pressed: ${button}`);
-  }
+export default function Buttons(value, onClick){
+  
+  const handleButton = Functions.handleButton();
+  const clearScreen = Functions.clearScreen();
 
   return (
+    
     <div id="buttons">
-      <button value="AC" onClick={handleButton}>AC</button>
+      <button value="AC" onClick={clearScreen}>AC</button>
       <button value="+/-" onClick={handleButton}>±</button>
       <button value="%" onClick={handleButton}>%</button>
       <button className="bgColorYellow" value="/" onClick={handleButton}>÷</button>
@@ -34,7 +32,8 @@ export default function Buttons(operation){
       
       <button className="grid-span2" value="0" onClick={handleButton}>0</button>
       <button value="." onClick={handleButton}>.</button>
-      <button className="bgColorYellow" value="=" onClick={handleButton}>=</button>
+      <button className="bgColorYellow" value="=" onClick={calc}>=</button>
     </div>
+
   );
 }
