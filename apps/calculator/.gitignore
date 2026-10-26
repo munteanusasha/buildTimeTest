@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 App1.jsx
+buttons.jsx
+display.jsx
+functions.jsx
