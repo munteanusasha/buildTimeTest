@@ -31,6 +31,11 @@ export default function Calculator() {
     return setResult((result = 0));
   }
 
+  function plusMinus() {
+    const value = eval(result);
+    setResult(value * -1);
+  }
+
   function calc() {
     try {
       setResult((result = eval(result)));
@@ -45,7 +50,7 @@ export default function Calculator() {
       <Display id="display" value={result} />
       <div id="buttons">
         <Button value="AC" onClick={clearScreen} />
-        <Button value="±" onClick={handleButton} />
+        <Button value="±" onClick={plusMinus} />
         <Button value="%" onClick={handleButton} />
         <Button className="bgColorYellow" value="⤺" onClick={del} />
         <Button value="7" onClick={handleButton} />
