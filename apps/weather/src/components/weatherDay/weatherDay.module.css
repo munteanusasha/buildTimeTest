@@ -1,0 +1,76 @@
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: hsl(0, 9%, 77%);
+  color: #333;
+}
+
+@media (max-width: 350px) {
+  .weather {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    /* background: linear-gradient(to top left, hsl(286, 41%, 56%), hsl(54, 35%, 68%)); */
+  }
+
+  .weather,
+  .dayWeather,
+  .temp,
+  .desc,
+  .dayCard,
+  .icon {
+    font-size: 0.5rem;
+  }
+}
+
+.weather {
+  /* overflow: hidden; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  /* background-color: hsl(286, 55%, 45%); */
+  background: linear-gradient(
+    to bottom right,
+    hsl(286, 57%, 40%),
+    hsl(39, 72%, 72%)
+  );
+  margin: 10px 5px;
+  width: auto;
+  height: auto;
+  padding: 15px 5px;
+  color: white;
+  text-align: left;
+}
+
+.dayWeather {
+  /* width: auto; */
+  margin: 10px 25px;
+  height: auto;
+}
+
+.temp {
+  font-size: 5rem;
+}
+
+#desc {
+  font-size: 1.5rem;
+  /* color: blueviolet; */
+}
+
+.dayCard {
+  flex-basis: auto;
+  margin-top: 20%;
+  padding: 20px 5px;
+  text-align: right;
+  color: white;
+}
+
+#icon {
+  font-size: 5rem;
+  display: inline;
+}
+
+.dayCard p {
+  margin: 0 15px 0 10px;
+  padding: 5px;
+}

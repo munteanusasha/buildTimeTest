@@ -1,0 +1,30 @@
+.expand {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  margin: 0.25rem;
+}
+
+.expand p {
+  font-size: 1.5em;
+  font-style: Helvetica, sans-serif;
+  color: hsl(0, 50%, 10%);
+  margin: 10px;
+  padding: 10px;
+}
+
+@media (max-width: 450px) {
+  .expand {
+    background-color: hsl(0, 35%, 79%);
+    border-radius: 25px;
+    justify-content: flex-start;
+    font-size: 0.8em;
+    font-weight: bold;
+  }
+  p {
+    margin: 0;
+    padding: 0;
+  }
+}
