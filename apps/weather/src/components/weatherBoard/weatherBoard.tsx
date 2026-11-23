@@ -75,10 +75,9 @@ export default function WeatherBoard() {
       })
       .catch((error) => {
         if (controller.signal.aborted) return;
-        console.error("Fetching data error: ", error, "\nCity undefined | null");
+        console.error("Fetching data error: ", error, "\nCity undefined OR null");
         setLoading(false);
       });
-    console.log("RENDER CITY");
     return () => {
       controller.abort(); // CLEAN UP AXIOS...!!!
     }
@@ -99,15 +98,13 @@ export default function WeatherBoard() {
       })
       .then((response) => {
         setWeek(response.data);
-        // console.log("forecast: ", response.data);
         setLoading(false);
       })
       .catch((error) => {
         if (controller.signal.aborted) return;
-        console.error("Fetching data error: ", error, "\nCoords undefined | null");
+        console.error("Fetching data error: ", error, "\nCoords undefined OR null");
         setLoading(false);
       });
-    console.log("RENDER FORECAST");
     return () => {
       controller.abort()
     }
@@ -135,6 +132,7 @@ export default function WeatherBoard() {
 
 
   }, [current, week]);
+
 
   //=========================================================================
   if (loading === null || current === null) return <p style={{ textAlign: "center" }
