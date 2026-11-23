@@ -4,9 +4,22 @@
   /* flex-flow: column wrap; */
 }
 
+.city{
+  margin: 1em 0.5em;
+  padding: 0.5em;
+  /* width: auto; */
+  font-family: 1em Arial,sans-serif;
+  font-size: 2rem;
+  border: navajowhite;
+  border-radius: 20px;
+  background-color: hsl(60, 1%, 14%);
+  color: white;
+}
+
 .weekdays {
   display: flex;
-  flex-direction: row;
+  /* flex-direction: row; */
+  flex-flow: row;
 }
 
 .backLink {

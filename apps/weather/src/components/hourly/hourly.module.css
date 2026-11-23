@@ -1,7 +1,7 @@
 .expand {
   display: flex;
   flex-flow: row nowrap;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem;
   padding: 0.75rem;
   margin: 0.25rem;
@@ -14,13 +14,18 @@
   margin: 10px;
   padding: 10px;
 }
+.icon{
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
 
 @media (max-width: 450px) {
   .expand {
     background-color: hsl(0, 35%, 79%);
     border-radius: 25px;
     justify-content: flex-start;
-    font-size: 0.8em;
+    font-size: 0.7em;
     font-weight: bold;
   }
   p {

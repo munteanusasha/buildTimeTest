@@ -3,14 +3,8 @@
 import styles from "./weatherWeek.module.css";
 import dayjs from "dayjs";
 
-type WeatherWeekProps = {
-  onSelect: () => void;
-  expanded: boolean;
-  day: number;
-  dtemp: number;
-  iconUrl: string;
-  humidity: number;
-}
+import { type WeatherWeekProps } from "../../util/types"  // IMPORT TYPES DECLARATION
+
 
 export default function WeatherWeek(props: WeatherWeekProps) {
   return (
@@ -19,7 +13,7 @@ export default function WeatherWeek(props: WeatherWeekProps) {
       onClick={props.onSelect}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
+      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           props.onSelect();
@@ -33,7 +27,8 @@ export default function WeatherWeek(props: WeatherWeekProps) {
         </p>
         <p className={styles.tempDay}>{Math.round(props.dtemp)}&#176;C</p>
         <img src={props.iconUrl} alt="weather-icon" />
-        <p className={styles.humidity}>Humididty: {props.humidity}%</p>
+        <p className={styles.humidity}>Humid: {props.humidity}%</p>
+
       </div>
     </div>
   );

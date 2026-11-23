@@ -1,82 +1,63 @@
-import { Fragment, useState, useEffect, type KeyboardEvent, type ChangeEvent} from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import {
+  useState,
+  useEffect,
+  type KeyboardEvent,
+  type ChangeEvent,
+} from "react";
+import {
+  useNavigate,
+  useParams
+} from "react-router";
+
+import type {  // IMPORT TYPES DECLARATION
+  Coordinates,
+  CurrentWeather,
+  Forecast,
+  ForecastItem,
+  WeekDay
+} from "../../util/types";
 
 import axios from "axios";
 import dayjs from "dayjs";
 
-import WeatherDay from "../weatherDay/weatherDay";
 import WeatherWeek from "../weatherWeek/weatherWeek";
-import Hourly from "../hourly/hourly";
-
 import styles from "./weatherBoard.module.css";
 
 export default function WeatherBoard() {
 
-type Coordinates = {lat: number | null; lon: number | null};
-type Weather = {icon: string, description: string, main: string};
+  const [coords, setCoords] = useState<Coordinates | null>({ lat: null, lon: null });
 
-type CurrentWeather = {
-  name: string;
-  dt: number;
-  coord: { lat: number ; lon: number};
-  sys:{ country: string};
-  main:{temp: number, temp_max: number; temp_min: number};
-  weather: Weather[];
-};
-
-type ForecastItem = {
-  dt:number;
-  dt_txt:string;
-  main:{temp: number; humidity: number};
-  weather: Weather[];
-}
-type Forecast = {
-  list: ForecastItem[];
-};
-type WeekDay = [string, ForecastItem[]];
-
-  const [location, setLocation] = useState <Coordinates>({ lat: null, lon: null });
-  
-  const [day, setDay] = useState <CurrentWeather | null> (null);
-  const [week, setWeek] = useState <Forecast | null>(null);
-  const [weekDays, setWeekDays] = useState <WeekDay[]>([]);
+  const [current, setCurrent] = useState<CurrentWeather | null>(null);
+  const [week, setWeek] = useState<Forecast | null>(null);
+  const [weekDays, setWeekDays] = useState<WeekDay[]>([]);
 
   const [loading, setLoading] = useState(true);
 
-  const [city, setCity] = useState<string>("Chisinau"); // use location
-  
-  const [cityInput, setCityInput] = useState <string> ("Chisinau") // input
+  const [city, setCity] = useState<string>("Chisinau");
+
+  const [cityInput, setCityInput] = useState<string>(city) // input
 
   const navigate = useNavigate();
   const { dayForecast } = useParams();
-  const selectedDay = dayForecast?.replace(/-forecast$/, "") ?? null;
+
+  const selectedDay = dayForecast?.endsWith("-forecast") ? dayForecast?.replace(/-forecast$/, "") : null;
 
   // API KEY
-  const apiKey = import.meta.env.VITE_API_KEY_NEW;
+  const apiKey = import.meta.env.VITE_API_KEY;
 
-  //   ADD EVENT LISTENER FOR ENTER/SPACE KEYS TO GET THE INPUT
+  //   ADD EVENT LISTENER
   const handleCityChange = (e: ChangeEvent<HTMLInputElement>) => {
-          setCityInput(e.currentTarget.value);
-        }
-  const handleKeyUp = (e : KeyboardEvent<HTMLInputElement>) => {
+    setCityInput(e.target.value);
+  }
+  const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.code === "Enter") {
-      setCity((prevCity) => prevCity = cityInput);
+      setCity(cityInput);
     }
   };
 
-  // useEffect(() => { // GET USER COORDINATES FROM USER LOCATION
-
-  //   navigator.geolocation.getCurrentPosition((position) => {
-  //     setLocation({
-  //       lat:position.coords.latitude,
-  //       lon:position.coords.longitude,
-  //     })
-  //   },
-  //     (error) => console.error("Could not get location!", error.message));
-  // },[])
-
   useEffect(() => { // GET LAT/LON OF THE CITY
-  
+    const controller = new AbortController();
+
     axios
       .get("https://api.openweathermap.org/data/2.5/weather", {
         params: {
@@ -84,80 +65,84 @@ type WeekDay = [string, ForecastItem[]];
           appid: apiKey,
           units: "metric",
         },
+        signal: controller.signal,
       })
       .then((response) => {
-        setDay(response.data);
-        // console.log("Response by city: ", response);
-        setLocation({
-          lat: response.data.coord.lat,
-          lon: response.data.coord.lon,
-        });
+        setCurrent(response.data);
+        const { coord: { lat: lat, lon: lon } } = response.data;
+        setCoords({ lat: lat, lon: lon });
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Fetching data error: ", error);
+        if (controller.signal.aborted) return;
+        console.error("Fetching data error: ", error, "\nCity undefined | null");
         setLoading(false);
       });
-  }, [city]);
-
+    console.log("RENDER CITY");
+    return () => {
+      controller.abort(); // CLEAN UP AXIOS...!!!
+    }
+  }, [city, apiKey]);
 
   useEffect(() => { // GET TEMP OF THE CITY BY LAT/LON COORDINATES
-    
-    if (location.lat === null || location.lon === null) return;
-
+    const controller = new AbortController();
+    if (coords === null) return;
     axios
       .get("https://api.openweathermap.org/data/2.5/forecast", {
         params: {
-          lat: location.lat,
-          lon: location.lon,
+          lat: coords.lat,
+          lon: coords.lon,
           appid: apiKey,
           units: "metric",
         },
+        signal: controller.signal,
       })
       .then((response) => {
         setWeek(response.data);
+        // console.log("forecast: ", response.data);
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Fetching data error: ", error);
+        if (controller.signal.aborted) return;
+        console.error("Fetching data error: ", error, "\nCoords undefined | null");
+        setLoading(false);
       });
-
-  }, [location]);
+    console.log("RENDER FORECAST");
+    return () => {
+      controller.abort()
+    }
+  }, [coords, apiKey]);
 
   useEffect(() => { // WEEK DAYS
-    
-    if (day === null || week === null) return;
+    if (current === null || week === null) return;
 
-    const forecastWeekDays = week.list.reduce<Map<string, ForecastItem[]>>((groups, item) => {
+    //  *********** GROUP BY DAY  ****************//
+    const forecastWeekDays = week?.list.reduce<Map<string, ForecastItem[]>>((groups, item) => {
       const dayName = dayjs.unix(item.dt).format("dddd");
       const forecasts = groups.get(dayName) ?? [];
       forecasts.push(item);
       groups.set(dayName, forecasts);
       return groups;
     },
-  new Map(),
-  )
+      new Map(),
+    )
 
-for (const [dayName, forecasts] of forecastWeekDays) {
-  setWeekDays((previous) => [...previous, [dayName, forecasts]]);
-}
-    return () => {
-      setWeekDays([]);
-    };
-  }, [day, week, location]);
+    //  ************* store in weekdays grouped arrays 2 elem. ["dayName", [forecast]] *************//
 
-  //=========================================================================
+    for (const [dayName, forecasts] of forecastWeekDays) {
+      setWeekDays((previous) => [...previous, [dayName, forecasts]]);
+    }
 
-  const selectedForecast = weekDays.find(
-    ([dayName]) => dayName === selectedDay,
-  )?.[1];
+
+  }, [current, week]);
 
   //=========================================================================
-  if (loading || day === null) return <p>Loading... </p>;
+  if (loading === null || current === null) return <p style={{ textAlign: "center" }
+  }> Loading... </p >;
 
   return (
     <div className={styles.weatherBoard}>
-      <input
+      <input className={styles.city}
         type="text"
         id="city"
         value={cityInput}
@@ -166,74 +151,26 @@ for (const [dayName, forecasts] of forecastWeekDays) {
         placeholder="City:"
       />
 
-      {/* =================   DAY =================== */}
-
-      <WeatherDay
-        city={day.name}
-        country={day.sys.country}
-        dt={day.dt}
-        dayTemp={day.main.temp}
-        icon={day.weather[0].icon}
-        desc={day.weather[0].description}
-        weatherMain={day.weather[0].main}
-        maxTemp={day.main.temp_max}
-        minTemp={day.main.temp_min}
-      />
-
       {/* =================   WEEK  =================== */}
       <div className={styles.weekdays}>
-        {!selectedDay &&
-          weekDays.map(([dayName, forecasts]) => {
-            const firstForecast = forecasts[0];
-            return (
-              <Fragment key={dayName}>
-                <WeatherWeek
-                  day={firstForecast.dt}
-                  dtemp={firstForecast.main.temp}
-                  iconUrl={`https://openweathermap.org/payload/api/media/file/${firstForecast.weather[0].icon}.png`}
-                  humidity={firstForecast.main.humidity}
-                  onSelect={() => navigate(`/${dayName}-forecast`)}
-                  expanded={selectedDay === dayName}
-                />
-              </Fragment>
-            );
-          })}
+        {/* //===========================================
+                      showing all days forecast
+              ===========================================*/}
+        {weekDays.map(([dayName, forecasts]) => {
+          const firstForecast = forecasts[0];
 
-        {/* ===================	Link back	===================== */}
-
-        {selectedDay && (
-          <Link to="/show-5-day-forecast" className={styles.backLink}>
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M19 12H5" />
-              <path d="m12 19-7-7 7-7" />
-            </svg>
-            <span>5-day forecast</span>
-          </Link>
-        )}
-
-        {/* =======================	Hourly	==================== */}
-
-        {selectedForecast && (
-          <div>
-            {selectedForecast.map((forecast) => (
-              <Hourly
-                key={forecast.dt_txt}
-                hour={forecast.dt}
-                temp={forecast.main.temp}
-              />
-            ))}
-          </div>
-        )}
+          return (
+            <WeatherWeek
+              key={dayName}
+              day={firstForecast.dt}
+              dtemp={firstForecast.main.temp}
+              iconUrl={`https://openweathermap.org/payload/api/media/file/${firstForecast.weather[0].icon}.png`}
+              humidity={firstForecast.main.humidity}
+              onSelect={() => navigate(`/${city}/week/${dayName}`)}
+              expanded={selectedDay === dayName}
+            />
+          );
+        })}
       </div>
     </div>
   );
