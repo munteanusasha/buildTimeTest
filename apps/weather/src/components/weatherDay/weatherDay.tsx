@@ -1,103 +1,74 @@
-import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 
-import axios from "axios";
+import weatherApi from "../../doc/axios";
 import dayjs from "dayjs";
+
 import styles from "./weatherDay.module.css";
-import type { WeatherData } from "../../util/types";
 import Hourly from "../hourly/hourly";
+import type { ForecastItem, HourlyProps } from "../../util/types";
 
 const WeatherDay = () => {
   const params = useParams<{ city: string, day: string }>();
 
-  const [coords, setCoords] = useState<{ lat: null, lon: null } | null>(null);
+  //===========================================================
+  //                         useQuery
 
-  const [dayForecast, setDayForecast] = useState<WeatherData>({
-    country: "Country",
-    hourly: [{
-      temp: 0,
-      time: 0,
-      maxTemp: 0,
-      minTemp: 0,
-      weatherMainDesc: "---",
-      weatherIcon: '--',
-    }],
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ["forecast", params.city, params.day],
+    enabled: Boolean(params.city),
+    queryFn: async ({ signal }) => {
+
+      // REQUEST for coord by params.city
+      const { data: { coord: { lat, lon } } } = await weatherApi.get("/weather", { params: { q: params.city }, signal });
+
+      // REQUEST for forecast by coords
+      const { data } = await weatherApi.get("/forecast", { params: { lat: lat, lon: lon }, signal });
+      return data;
+    },
+
+    select: ({ city: { country }, list: forecasts }) => {
+
+      //  ***********    FILTER    ************
+
+      const day = (forecast: ForecastItem) => dayjs.unix(forecast.dt).format("dddd") === params.day;
+      const forecast = forecasts.filter(day);
+
+      //  ***********   DESTRUCT   *************
+
+      const hourly = forecast.map((hour: ForecastItem) => {
+        const { dt, dt_txt, main: { temp, temp_max, temp_min }, weather: [{ main, description, icon }] } = hour;
+        return {
+          hour: dt,
+          timeText: dt_txt,
+          temp: temp,
+          maxTemp: temp_max,
+          minTemp: temp_min,
+          weatherMainDesc: main,
+          weatherDesc: description,
+          weatherIcon: icon,
+        }
+      });
+      return { country, hourly };
+    }
   });
 
-  const apiKey = import.meta.env.VITE_API_KEY;
+  if (isPending) return <p>Loading...</p>
+  if (isError) return <p>Could not load weather:{error?.message}</p>
 
-  useEffect(() => {
-    if (params.city === undefined) return;
-    const controller = new AbortController();
+  //                    end useQuery
+  //===========================================================
 
-    axios.get(
-      'https://api.openweathermap.org/data/2.5/weather',
-      {
-        params: {
-          q: params.city,
-          appid: apiKey,
-          units: 'metric'
-        },
-        signal: controller.signal,
-      }).then(({ data: {
-        coord: { lat, lon },
-      } }) => {
-        setCoords({ lat: lat, lon: lon });
-      }).catch((error) => {
-        console.error("Fetching data error: ", error, "\nCity = undefined || NULL");
-      });
-
-    return () => controller.abort();
-  }, [params?.city, apiKey]);
-
-  useEffect(() => {
-    if (coords === null) return;
-    const controller = new AbortController();
-
-    axios.get('https://api.openweathermap.org/data/2.5/forecast', {
-      params: {
-        lat: coords.lat,
-        lon: coords.lon,
-        appid: apiKey,
-        units: 'metric'
-      },
-      signal: controller.signal,
-    })
-      .then(({ data: {
-        city: { country },
-        list: forecasts,
-      } }) => {
-
-        //  ***********  FILTER  ************ //
-
-        const day = (forecast: any) => dayjs.unix(forecast.dt).format('dddd') === params.day;
-        const forecast = forecasts.filter(day);
-
-        //  ********* DESTRUCT  ************* //
-
-        const hourly = forecast.map((hour: any) => {
-          const { dt, dt_txt, main: { temp, temp_max, temp_min }, weather: [{ main, description, icon }] } = hour;
-          return {
-            time: dt,
-            timeText: dt_txt,
-            temp: temp,
-            maxTemp: temp_max,
-            minTemp: temp_min,
-            weatherMainDesc: main,
-            weatherDesc: description,
-            weatherIcon: icon,
-          }
-        });
-
-        //  ************   setState DAY FORECAST   ************ //
-        setDayForecast({ country, hourly });
-      })
-      .catch((error) => {
-        console.error("Fetching data error: ", error, "\nCoords = NULL");
-      });
-
-    return () => controller.abort();
-  }, [params.day, coords, apiKey]);
+  const hourly = data.hourly.map((hour: HourlyProps) => {
+    return (
+      <Hourly
+        key={hour.hour}
+        hour={hour.hour}
+        temp={hour.temp}
+        icon={`https://openweathermap.org/payload/api/media/file/${hour.weatherIcon}.png`}
+      />
+    )
+  })
 
   return (
     <div>
@@ -120,39 +91,32 @@ const WeatherDay = () => {
           <span>5-day<br />forecast</span>
         </Link>
         <div className={styles.dayWeather}>
-          <h2>{params.city}, {dayForecast.country} Weather</h2>
+          <h2>{params.city}, {data?.country ?? "---"} Weather</h2>
           <p>
-            {dayjs.unix(dayForecast.hourly[0].time).format("HH:mm")}, {params.day}
+            {dayjs.unix(data?.hourly[0].hour ?? NaN).format("HH:mm")}, {/** TIME  */}
+            {params.day}
           </p>
           <div className={styles.temp}>
-            {Math.round(dayForecast.hourly[0].temp)}C&#176;
+            {Math.round(data?.hourly[0].temp ?? NaN)}C&#176;
           </div>
-          <p>{dayForecast.hourly[0].weatherMainDesc}</p>
-          <h3>{dayForecast.hourly[0].weatherMainDesc}</h3>
+          <p>{data?.hourly[0].weatherMainDesc ?? "--"}</p>
+          <h3>{data?.hourly[0].weatherMainDesc ?? "--"}</h3>
         </div>
         <div className={styles.dayCard}>
-          <p id={styles.desc}>{dayForecast.hourly[0].weatherMainDesc}</p>
+          <p id={styles.desc}>{data?.hourly[0].weatherMainDesc ?? "--"}</p>
           <img
             id={styles.icon}
-            src={`https://openweathermap.org/payload/api/media/file/${dayForecast.hourly[0].weatherIcon}.png`}
-            alt={dayForecast.hourly[0].weatherMainDesc}
+            src={`https://openweathermap.org/payload/api/media/file/${data?.hourly[0].weatherIcon ?? "--"}.png`}
+            alt={data?.hourly[0].weatherMainDesc ?? "--"}
             data-name="weatherIcon"
           />
           <p>
-            Max:{Math.round(dayForecast.hourly[0].maxTemp)}C&deg; /Min:
-            {Math.round(dayForecast.hourly[0].minTemp)}C&#176;
+            Max:{(Math.round(data?.hourly[0].maxTemp ?? 0))}C&deg; /Min:
+            {Math.round(data?.hourly[0].minTemp ?? 0)}C&#176;
           </p>
         </div>
       </div>
-
-      {dayForecast.hourly.map((hour) =>
-        <Hourly
-          key={hour.time}
-          hour={hour.time}
-          temp={hour.temp}
-          icon={`https://openweathermap.org/payload/api/media/file/${hour.weatherIcon}.png`}
-        />
-      )}
+      {hourly}
     </div>
   );
 }

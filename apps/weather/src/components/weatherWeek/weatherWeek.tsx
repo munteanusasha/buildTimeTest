@@ -1,12 +1,10 @@
-// import WeeksDayExpand from "../weeksdayexpand/weeksdayexpand";
-
 import styles from "./weatherWeek.module.css";
 import dayjs from "dayjs";
 
 import { type WeatherWeekProps } from "../../util/types"  // IMPORT TYPES DECLARATION
 
 
-export default function WeatherWeek(props: WeatherWeekProps) {
+const WeatherWeek = (props: WeatherWeekProps) => {
   return (
     <div
       className={styles.weekDayForecast}
@@ -23,8 +21,10 @@ export default function WeatherWeek(props: WeatherWeekProps) {
     >
       <div className={styles.weekday}>
         <p className={styles.day}>
-          {dayjs.unix(props.day).format("ddd HH:mm")}
+          {dayjs.unix(props.day).format("ddd")} {/* HH:mm*/}
         </p>
+        {/*     TO DO ... */}
+        {/* DAY : TEMP / NIGHT : TEMP */}
         <p className={styles.tempDay}>{Math.round(props.dtemp)}&#176;C</p>
         <img src={props.iconUrl} alt="weather-icon" />
         <p className={styles.humidity}>Humid: {props.humidity}%</p>
@@ -33,3 +33,4 @@ export default function WeatherWeek(props: WeatherWeekProps) {
     </div>
   );
 }
+export default WeatherWeek;

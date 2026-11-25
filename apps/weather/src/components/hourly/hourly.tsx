@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 
 import { type HourlyProps } from "../../util/types" // IMPORT TYPES DECLARATION
 
-export default function Hourly(props: HourlyProps) {
+const Hourly = (props: HourlyProps) => {
 
   return (
     <div id="hourly" className={styles.expand}>
@@ -14,3 +14,4 @@ export default function Hourly(props: HourlyProps) {
     </div>
   );
 }
+export default Hourly;

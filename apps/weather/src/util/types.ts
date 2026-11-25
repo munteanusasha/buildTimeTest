@@ -29,10 +29,10 @@ export interface CurrentWeatherData {
 
 export interface WeatherData{
   country: string,
-  hourly: forecast[],
+  hourly: HourlyForecast[],
 }
 
-export interface forecast {
+export interface HourlyForecast {
   time: number,
   temp: number,
   maxTemp:number,
@@ -53,7 +53,7 @@ export type WeatherWeekProps = {
 }
 
 //  ## Hourly
-export type HourlyProps = {
+export interface HourlyProps{
   hour: number;
   temp: number;
   icon: string;
@@ -77,7 +77,12 @@ export type HourlyProps = {
   export type ForecastItem = {
     dt: number;
     dt_txt: string;
-    main: { temp: number; temp_max: number; temp_min: number , humidity: number};
+    main: { 
+      temp: number; 
+      temp_max: number; 
+      temp_min: number , 
+      humidity: number
+    };
     weather: Weather[];
   }
 
